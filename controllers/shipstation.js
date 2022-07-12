@@ -52,7 +52,7 @@ const analyzeOrders = async (newOrders) => {
       const SKUs = ['cb1', 'cb3', 'cb6', 'essentials'];
       const itemSKUs = [];
       SKUs.forEach((SKU) => {
-        if (order.item.find((item) => item.sku.includes(SKU))) {
+        if (order.items.find((item) => item.sku.includes(SKU))) {
           itemSKUs.push(SKU);
         }
       });
