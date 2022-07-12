@@ -49,7 +49,7 @@ const analyzeOrders = async (newOrders) => {
       // ];
 
       // CB1 or CB3 or CB6 or ESSENTIALS
-      const SKUs = ['CB1', 'CB3', 'CB6', 'ESSENTIALS'];
+      const SKUs = ['cb1', 'cb3', 'cb6', 'essentials'];
       const itemSKUs = [];
       SKUs.forEach((SKU) => {
         if (order.item.find((item) => item.sku.includes(SKU))) {
@@ -146,7 +146,7 @@ const shipstationApiCall = async (url, method, body) => {
       url: url,
       headers: {
         // Your API Authorization token goes here.
-        Authorization: process.env.SHIPSTATION_API_KEY,
+        Authorization: `Basic ${process.env.SHIPSTATION_API_KEY}`,
         "Content-Type": "application/json",
       },
     };
