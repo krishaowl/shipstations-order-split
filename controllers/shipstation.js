@@ -110,7 +110,7 @@ const splitShipstationOrder = (order, SKUs) => {
         //   item.warehouseLocation = SKUs[x];
         // }
         // return item.warehouseLocation === SKUs[x];
-        item.sku.includes(SKU[x])
+        item.sku.includes(SKUs[x])
       });
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
