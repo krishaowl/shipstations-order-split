@@ -38,19 +38,38 @@ const analyzeOrders = async (newOrders) => {
       const order = newOrders[x];
 
       // Create an array of all the individual warehouseLocations present on the order.
-      const warehouses = [
-        ...new Set(
-          order.items.map((item) => {
-            if (item.warehouseLocation != null) {
-              return item.warehouseLocation;
-            }
-          })
-        ),
-      ];
+      // const warehouses = [
+      //   ...new Set(
+      //     order.items.map((item) => {
+      //       if (item.warehouseLocation != null) {
+      //         return item.warehouseLocation;
+      //       }
+      //     })
+      //   ),
+      // ];
+
+      // CB1 or CB3 or CB6 or ESSENTIALS
+      const SKUs = ['CB1', 'CB3', 'CB6', 'ESSENTIALS'];
+      const itemSKUs = [];
+      SKUs.forEach((SKU) => {
+        if (order.item.find((item) => item.sku.includes(SKU))) {
+          itemSKUs.push(SKU);
+        }
+      });
+      // const findItemSKUs = order.item.find((item) => item.sku.includes("CB1") || item.sku.includes("CB3") || item.sku.includes("CB6") || item.sku.includes("ESSENTIALS"))
 
       // If there are multiple warehouse locations, split the order.
-      if (warehouses.length > 1) {
-        const orderUpdateArray = splitShipstationOrder(order, warehouses);
+      // if (warehouses.length > 1) {
+      //   const orderUpdateArray = splitShipstationOrder(order, warehouses);
+      //   await shipstationApiCall(
+      //     "https://ssapi.shipstation.com/orders/createorders",
+      //     "post",
+      //     orderUpdateArray
+      //   );
+      // }
+
+      if (itemSKUs.length > 0) {
+        const orderUpdateArray = splitShipstationOrder(order, itemSKUs);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
           "post",
@@ -72,25 +91,26 @@ const analyzeOrders = async (newOrders) => {
  *
  * @return {array} an array of order objects to be updated in ShipStation
  */
-const splitShipstationOrder = (order, warehouses) => {
+const splitShipstationOrder = (order, SKUs) => {
   let orderUpdateArray = [];
 
   // Loop through every warehouse present on the order.
-  for (let x = 0; x < warehouses.length; x++) {
+  for (let x = 0; x < SKUs.length; x++) {
     try {
       // Create a copy of the original order object.
       let tempOrder = { ...order };
 
       // Give the new order a number to include the warehouse as a suffix.
-      tempOrder.orderNumber = `${tempOrder.orderNumber}-${warehouses[x]}`;
+      tempOrder.orderNumber = `${tempOrder.orderNumber}-${SKUs[x]}`;
 
       // Filter for the order items for this specific warehouse.
       tempOrder.items = tempOrder.items.filter((item) => {
         // If the item's warehouseLocation is null, assign it to the first warehouse present.
-        if (item.warehouseLocation == null && x === 0) {
-          item.warehouseLocation = warehouses[x];
-        }
-        return item.warehouseLocation === warehouses[x];
+        // if (item.warehouseLocation == null && x === 0) {
+        //   item.warehouseLocation = SKUs[x];
+        // }
+        // return item.warehouseLocation === SKUs[x];
+        item.sku.includes(SKU[x])
       });
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
