@@ -97,6 +97,14 @@ const analyzeOrders = async (newOrders) => {
 const splitShipstationOrder = async (order, SKUs) => {
   let orderUpdateArray = [];
 
+  let mainOrder = { ...order };
+  mainOrder.items = mainOrder.items.filter((item) => {
+    return item.sku == null || (!item.sku.includes("cb1") && !item.sku.includes("cb3") && !item.sku.includes("cb6") && !item.sku.includes("essentials"));
+  });
+  if (mainOrder.items.length > 0) {
+    orderUpdateArray.push(mainOrder);
+  }
+
   // Loop through every warehouse present on the order.
   for (let x = 0; x < SKUs.length; x++) {
     try {
@@ -119,13 +127,13 @@ const splitShipstationOrder = async (order, SKUs) => {
       console.log(`tempOrder.items for ${SKUs[x]}`, tempOrder.orderNumber, tempOrder.items);
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
-      if (x !== 0) {
-        delete tempOrder.orderKey;
-        delete tempOrder.orderId;
-        tempOrder.amountPaid = 0;
-        tempOrder.taxAmount = 0;
-        tempOrder.shippingAmount = 0;
-      }
+      // if (x !== 0) {
+      delete tempOrder.orderKey;
+      delete tempOrder.orderId;
+      tempOrder.amountPaid = 0;
+      tempOrder.taxAmount = 0;
+      tempOrder.shippingAmount = 0;
+      // }
       orderUpdateArray.push(tempOrder);
     } catch (err) {
       throw new Error(err);
