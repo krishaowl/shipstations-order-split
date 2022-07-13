@@ -116,7 +116,7 @@ const splitShipstationOrder = async (order, SKUs) => {
         return item.sku != null && item.sku.includes(SKUs[x]);
       });
 
-      console.log(`tempOrder.items for ${SKUs[X]}`, tempOrder.items);
+      console.log(`tempOrder.items for ${SKUs[x]}`, tempOrder.items);
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
       if (x !== 0) {
