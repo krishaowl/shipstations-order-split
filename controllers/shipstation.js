@@ -15,7 +15,7 @@ exports.newOrders = async (req, res, next) => {
 
     // If there are new orders, analyze the new orders.
     if (response.data.orders.length >= 1) {
-      const filterOrders = response.data.orders.filter((order) => !order.orderNumber.includes('-'));
+      const filterOrders = response.data.orders.filter((order) => !order.orderNumber.toLowerCase().includes('-'));
       analyzeOrders(filterOrders);
     }
 
@@ -55,11 +55,11 @@ const analyzeOrders = async (newOrders) => {
       const SKUs = ['cb1', 'cb3', 'cb6', 'essentials'];
       const itemSKUs = [];
       SKUs.forEach((SKU) => {
-        if (order.items.find((item) => item.sku != null && item.sku.includes(SKU))) {
+        if (order.items.find((item) => item.sku != null && item.sku.toLowerCase().toLowerCase().includes(SKU))) {
           itemSKUs.push(SKU);
         }
       });
-      // const findItemSKUs = order.item.find((item) => item.sku.includes("CB1") || item.sku.includes("CB3") || item.sku.includes("CB6") || item.sku.includes("ESSENTIALS"))
+      // const findItemSKUs = order.item.find((item) => item.sku.toLowerCase().includes("CB1") || item.sku.toLowerCase().includes("CB3") || item.sku.toLowerCase().includes("CB6") || item.sku.toLowerCase().includes("ESSENTIALS"))
 
       // If there are multiple warehouse locations, split the order.
       // if (warehouses.length > 1) {
@@ -99,7 +99,7 @@ const splitShipstationOrder = async (order, SKUs) => {
 
   let mainOrder = { ...order };
   mainOrder.items = mainOrder.items.filter((item) => {
-    return item.sku == null || (!item.sku.includes("cb1") && !item.sku.includes("cb3") && !item.sku.includes("cb6") && !item.sku.includes("essentials"));
+    return item.sku == null || (!item.sku.toLowerCase().includes("cb1") && !item.sku.toLowerCase().includes("cb3") && !item.sku.toLowerCase().includes("cb6") && !item.sku.toLowerCase().includes("essentials"));
   });
   if (mainOrder.items.length > 0) {
     orderUpdateArray.push(mainOrder);
@@ -121,7 +121,7 @@ const splitShipstationOrder = async (order, SKUs) => {
         //   item.warehouseLocation = SKUs[x];
         // }
         // return item.warehouseLocation === SKUs[x];
-        return item.sku != null && item.sku.includes(SKUs[x]);
+        return item.sku != null && item.sku.toLowerCase().includes(SKUs[x]);
       });
 
       console.log(`tempOrder.items for ${SKUs[x]}`, tempOrder.orderNumber, tempOrder.items);
@@ -139,7 +139,7 @@ const splitShipstationOrder = async (order, SKUs) => {
       throw new Error(err);
     }
   }
-
+  console.log('orderUpdateArray>>>>', orderUpdateArray);
   return orderUpdateArray;
 };
 
