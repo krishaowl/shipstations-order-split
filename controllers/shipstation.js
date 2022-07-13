@@ -40,7 +40,7 @@ exports.newOrders = async (req, res, next) => {
         if (distinctSKUs.length === 1 && SKUs.indexOf(distinctSKUs[0]) >= 0) {
           // do nothing
         } else if (distinctSKUs.length === 2) {
-          if (distinctSKUs.indexOf('routeins') >= 0 && ((SKUs.indexOf(distinctSKUs[0]) >= 0) && (SKUs.indexOf(distinctSKUs[1]) >= 0)) ) {
+          if (distinctSKUs.indexOf('routeins') >= 0 && ((SKUs.indexOf(distinctSKUs[0]) >= 0) || (SKUs.indexOf(distinctSKUs[1]) >= 0)) ) {
             // do nothing
           } else {
             splitOrders.push(order);
