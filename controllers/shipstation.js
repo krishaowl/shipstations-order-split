@@ -1,5 +1,7 @@
 const axios = require("axios");
 
+const SKUs = ['cb1', 'cb3', 'cb6', 'essentials'];
+
 /**
  * Receives and processes a new order webhook from ShipStation.
  */
@@ -13,7 +15,8 @@ exports.newOrders = async (req, res, next) => {
 
     // If there are new orders, analyze the new orders.
     if (response.data.orders.length >= 1) {
-      analyzeOrders(response.data.orders);
+      const filterOrders = response.data.orders.filter((order) => !order.orderNumber.includes('-'));
+      analyzeOrders(filterOrders);
     }
 
     // Reply to the REST API request that new orders have been analyzed.
@@ -69,7 +72,7 @@ const analyzeOrders = async (newOrders) => {
       // }
 
       if (itemSKUs.length > 0) {
-        const orderUpdateArray = splitShipstationOrder(order, itemSKUs);
+        const orderUpdateArray = await splitShipstationOrder(order, itemSKUs);
         await shipstationApiCall(
           "https://ssapi.shipstation.com/orders/createorders",
           "post",
@@ -91,7 +94,7 @@ const analyzeOrders = async (newOrders) => {
  *
  * @return {array} an array of order objects to be updated in ShipStation
  */
-const splitShipstationOrder = (order, SKUs) => {
+const splitShipstationOrder = async (order, SKUs) => {
   let orderUpdateArray = [];
 
   // Loop through every warehouse present on the order.
