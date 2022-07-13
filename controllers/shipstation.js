@@ -104,7 +104,7 @@ const splitShipstationOrder = async (order, SKUs) => {
   if (mainOrder.items.length > 0) {
     orderUpdateArray.push(mainOrder);
   }
-
+  let updatedMainOrder = false;
   // Loop through every warehouse present on the order.
   for (let x = 0; x < SKUs.length; x++) {
     try {
@@ -127,13 +127,18 @@ const splitShipstationOrder = async (order, SKUs) => {
       console.log(`tempOrder.items for ${SKUs[x]}`, tempOrder.orderNumber, tempOrder.items);
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
-      // if (x !== 0) {
-      delete tempOrder.orderKey;
-      delete tempOrder.orderId;
-      tempOrder.amountPaid = 0;
-      tempOrder.taxAmount = 0;
-      tempOrder.shippingAmount = 0;
+      // if (mainOrder.items.length == 0) {
       // }
+      if (mainOrder.items.length === 0 && !updatedMainOrder) {
+        updatedMainOrder = true;
+      } else {
+        delete tempOrder.orderKey;
+        delete tempOrder.orderId;
+        tempOrder.amountPaid = 0;
+        tempOrder.taxAmount = 0;
+        tempOrder.shippingAmount = 0;
+      }
+
       orderUpdateArray.push(tempOrder);
     } catch (err) {
       throw new Error(err);
