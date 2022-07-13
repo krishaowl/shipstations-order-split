@@ -15,8 +15,42 @@ exports.newOrders = async (req, res, next) => {
 
     // If there are new orders, analyze the new orders.
     if (response.data.orders.length >= 1) {
-      const filterOrders = response.data.orders.filter((order) => !order.orderNumber.toLowerCase().includes('-'));
-      analyzeOrders(filterOrders);
+
+      // skip splittig order that are already splitted 
+      let filterOrders = response.data.orders.filter((order) => !order.orderNumber.toLowerCase().includes('-'));
+      let splitOrders = [];
+      // if only one type of sku in order then do not split
+      filterOrders.forEach((order) => {
+        const distinctSKUs = order.items.map((item) => {
+          if (item.sku.toLowerCase().includes('cb1')) {
+            return 'cb1';
+          } else if (item.sku.toLowerCase().includes('cb3')) {
+            return 'cb3';
+          } else if (item.sku.toLowerCase().includes('cb6')) {
+            return 'cb6';
+          } else if (item.sku.toLowerCase().includes('essentials')) {
+            return 'essentials';
+          } else if (item.sku.toLowerCase().includes('routeins')) {
+            return 'routeins';
+          } else {
+            return item.sku.toLowerCase();
+          }
+        });
+        console.log('distinctSKUs>>>>', distinctSKUs)
+        if (distinctSKUs.length === 1 && SKUs.indexOf(distinctSKUs[0]) >= 0) {
+          // do nothing
+        } else if (distinctSKUs.length === 2) {
+          if (distinctSKUs.indexOf('routeins') >= 0 && ((SKUs.indexOf(distinctSKUs[0]) >= 0) && (SKUs.indexOf(distinctSKUs[1]) >= 0)) ) {
+            // do nothing
+          } else {
+            splitOrders.push(order);
+          }
+        } else {
+          splitOrders.push(order);
+        }
+      });
+
+      analyzeOrders(splitOrders);
     }
 
     // Reply to the REST API request that new orders have been analyzed.
@@ -55,7 +89,7 @@ const analyzeOrders = async (newOrders) => {
       const SKUs = ['cb1', 'cb3', 'cb6', 'essentials'];
       const itemSKUs = [];
       SKUs.forEach((SKU) => {
-        if (order.items.find((item) => item.sku != null && item.sku.toLowerCase().toLowerCase().includes(SKU))) {
+        if (order.items.find((item) => item.sku != null && item.sku.toLowerCase().includes(SKU))) {
           itemSKUs.push(SKU);
         }
       });
