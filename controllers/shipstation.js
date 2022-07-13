@@ -52,7 +52,7 @@ const analyzeOrders = async (newOrders) => {
       const SKUs = ['cb1', 'cb3', 'cb6', 'essentials'];
       const itemSKUs = [];
       SKUs.forEach((SKU) => {
-        if (order.items.find((item) => item.sku.includes(SKU))) {
+        if (order.items.find((item) => item.sku != null && item.sku.includes(SKU))) {
           itemSKUs.push(SKU);
         }
       });
@@ -110,7 +110,7 @@ const splitShipstationOrder = (order, SKUs) => {
         //   item.warehouseLocation = SKUs[x];
         // }
         // return item.warehouseLocation === SKUs[x];
-        item.sku.includes(SKUs[x])
+        return item.sku != null && item.sku.includes(SKUs[x]);
       });
 
       // If this is not the first (primary) order, set the object to create new order in ShipStation.
