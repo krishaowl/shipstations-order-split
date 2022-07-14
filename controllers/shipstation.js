@@ -43,7 +43,7 @@ exports.newOrders = async (req, res, next) => {
         if (distinctSKUs.length === 1 && SKUs.indexOf(distinctSKUs[0]) >= 0) {
           // do nothing
         } else if (distinctSKUs.length === 2) {
-          if (distinctSKUs.indexOf('routeins') >= 0 && ((SKUs.indexOf(distinctSKUs[0]) >= 0) || (SKUs.indexOf(distinctSKUs[1]) >= 0)) ) {
+          if (distinctSKUs.indexOf('routeins') >= 0 && ((SKUs.indexOf(distinctSKUs[0]) >= 0) || (SKUs.indexOf(distinctSKUs[1]) >= 0))) {
             // do nothing
           } else {
             splitOrders.push(order);
@@ -53,14 +53,19 @@ exports.newOrders = async (req, res, next) => {
         }
       });
 
-      analyzeOrders(splitOrders);
-    }
+      await analyzeOrders(splitOrders);
 
-    // Reply to the REST API request that new orders have been analyzed.
-    res.status(200).json({
-      message: `Analyzed ${response.data.orders.length} new order(s).`,
-      data: response.data.orders,
-    });
+      // Reply to the REST API request that new orders have been analyzed.
+      res.status(200).json({
+        message: `Analyzed ${response.data.orders.length} new order(s).`,
+        data: response.data.orders,
+      });
+    } else {
+      res.status(200).json({
+        message: `Analyzed ${response.data.orders.length} new order(s).`,
+        data: response.data.orders,
+      });
+    }
   } catch (err) {
     throw new Error(err);
   }
