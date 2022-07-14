@@ -15,7 +15,7 @@ exports.newOrders = async (req, res, next) => {
 
     // If there are new orders, analyze the new orders.
     if (response.data.orders.length >= 1) {
-
+      console.log('Received orders length>>>>', response.data.orders.length)
       // skip splittig order that are already splitted 
       let filterOrders = response.data.orders.filter((order) => !order.orderNumber.toLowerCase().includes('-'));
 
@@ -39,7 +39,7 @@ exports.newOrders = async (req, res, next) => {
           }
         });
         distinctSKUs = [...new Set(distinctSKUs)];
-        console.log('distinctSKUs>>>>', distinctSKUs)
+        console.log('distinctSKUs>>>>', order.orderKey, distinctSKUs)
         if (distinctSKUs.length === 1 && SKUs.indexOf(distinctSKUs[0]) >= 0) {
           // do nothing
         } else if (distinctSKUs.length === 2) {
@@ -93,11 +93,13 @@ const analyzeOrders = async (newOrders) => {
 
       if (itemSKUs.length > 0) {
         const orderUpdateArray = await splitShipstationOrder(order, itemSKUs);
-        await shipstationApiCall(
-          "https://ssapi.shipstation.com/orders/createorders",
-          "post",
-          orderUpdateArray
-        );
+        if (orderUpdateArray.length > 0) {
+          await shipstationApiCall(
+            "https://ssapi.shipstation.com/orders/createorders",
+            "post",
+            orderUpdateArray
+          );
+        }
       }
     } catch (err) {
       throw new Error(err);
@@ -118,12 +120,20 @@ const splitShipstationOrder = async (order, SKUs) => {
   let orderUpdateArray = [];
 
   let mainOrder = { ...order };
-  mainOrder.items = mainOrder.items.filter((item) => {
-    return item.sku == null || (!item.sku.toLowerCase().includes("cb1") && !item.sku.toLowerCase().includes("cb3") && !item.sku.toLowerCase().includes("cb6") && !item.sku.toLowerCase().includes("essentials"));
-  });
-  if (mainOrder.items.length > 0) {
-    orderUpdateArray.push(mainOrder);
+
+  const isSplitReq = await isOrderSplittingRequired(mainOrder);
+  console.log('mainOrder is split required>>>>', mainOrder.orderKey, isSplitReq);
+  if (isSplitReq) {
+    mainOrder.items = mainOrder.items.filter((item) => {
+      return item.sku == null || (!item.sku.toLowerCase().includes("cb1") && !item.sku.toLowerCase().includes("cb3") && !item.sku.toLowerCase().includes("cb6") && !item.sku.toLowerCase().includes("essentials"));
+    });
+    if (mainOrder.items.length > 0) {
+      orderUpdateArray.push(mainOrder);
+    }
+  } else {
+    return orderUpdateArray;
   }
+
   let updatedMainOrder = false;
   // Loop through every SKU present on the order.
   for (let x = 0; x < SKUs.length; x++) {
@@ -160,6 +170,36 @@ const splitShipstationOrder = async (order, SKUs) => {
   console.log('orderUpdateArray>>>>', orderUpdateArray);
   return orderUpdateArray;
 };
+
+const isOrderSplittingRequired = async (order) => {
+  let distinctSKUs = order.items.map((item) => {
+    if (item.sku.toLowerCase().includes('cb1')) {
+      return 'cb1';
+    } else if (item.sku.toLowerCase().includes('cb3')) {
+      return 'cb3';
+    } else if (item.sku.toLowerCase().includes('cb6')) {
+      return 'cb6';
+    } else if (item.sku.toLowerCase().includes('essentials')) {
+      return 'essentials';
+    } else if (item.sku.toLowerCase().includes('routeins')) {
+      return 'routeins';
+    } else {
+      return item.sku.toLowerCase();
+    }
+  });
+  distinctSKUs = [...new Set(distinctSKUs)];
+  if (distinctSKUs.length === 1 && SKUs.indexOf(distinctSKUs[0]) >= 0) {
+    return false;
+  } else if (distinctSKUs.length === 2) {
+    if (distinctSKUs.indexOf('routeins') >= 0 && ((SKUs.indexOf(distinctSKUs[0]) >= 0) || (SKUs.indexOf(distinctSKUs[1]) >= 0))) {
+      return false;
+    } else {
+      return true;
+    }
+  } else {
+    return true;
+  }
+}
 
 /**
  * Performs a ShipStation API Call
